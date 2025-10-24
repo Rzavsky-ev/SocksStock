@@ -167,25 +167,23 @@ Authorization: Bearer <token>
 
 Носки (Socks)
 
-```JSON
+```json
 {
-  "id": Long,
-  "color": String,
-  "cottonPart": Integer
-  (0-100),
-  "quantity": Integer
+  "id": "Long",
+  "color": "String",
+  "cottonPart": "Integer (0-100)",
+  "quantity": "Integer"
 }
 ```
 
 Пользователь (AppUser)
 
-```JSON
+```json
 {
-  "id": Long,
-  "username": String,
-  "password": String
-  (encoded),
-  "role": UserRole
+  "id": "Long",
+  "username": "String",
+  "password": "String (encoded)",
+  "role": "UserRole"
 }
 ```
 
