@@ -29,7 +29,7 @@ pipeline {
 
         stage('Integration Tests') {
             steps {
-                sh 'mvn failsafe:integration-test failsafe:verify -Pci -DskipTests'
+                sh 'mvn failsafe:integration-test failsafe:verify -Pci -DskipITs=false'
                 junit 'target/failsafe-reports/**/*.xml'
             }
         }
