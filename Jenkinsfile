@@ -14,10 +14,23 @@ pipeline {
             steps { checkout scm }
         }
 
-        stage('Build & Test') {
+        stage('Build') {
             steps {
-                sh 'mvn clean test -Pci'
+                sh 'mvn clean compile -Pci'
+            }
+        }
+
+        stage('Unit Tests') {
+            steps {
+                sh 'mvn test -Pci'
                 junit 'target/surefire-reports/**/*.xml'
+            }
+        }
+
+        stage('Integration Tests') {
+            steps {
+                sh 'mvn failsafe:integration-test failsafe:verify -Pci -DskipITs=false'
+                junit 'target/failsafe-reports/**/*.xml'
             }
         }
 
