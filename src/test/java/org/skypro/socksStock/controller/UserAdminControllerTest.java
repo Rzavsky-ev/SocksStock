@@ -19,15 +19,11 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyLong;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.*;
-import static org.mockito.Mockito.never;
+
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -56,7 +52,6 @@ class UserAdminControllerTest {
     private static final String TEST_USERNAME = "testUser";
     private static final String TEST_PASSWORD = "testPass";
     private static final Role TEST_USER_ROLE = Role.ROLE_USER;
-    private static final Role TEST_ADMIN_ROLE = Role.ROLE_ADMIN;
 
     @DisplayName("Получение всех пользователей - должен вернуть список пользователей")
     @Test
@@ -145,49 +140,6 @@ class UserAdminControllerTest {
         then(userServiceMock).should().getUserByUsername(TEST_USERNAME);
     }
 
-    @DisplayName("Обновление роли пользователя - должен вернуть обновленного пользователя")
-    @Test
-    void updateUserRoleWhenUserExistsReturnUpdatedUser() throws Exception {
-        AppUser updatedUser = createTestUser(TEST_USER_ID, TEST_USERNAME, TEST_ADMIN_ROLE);
-        given(userServiceMock.updateUserRole(eq(TEST_USER_ID), eq(TEST_ADMIN_ROLE)))
-                .willReturn(updatedUser);
-
-        mockMvc.perform(put("/api/admin/users/{id}/role", TEST_USER_ID)
-                        .with(csrf())
-                        .param("role", TEST_ADMIN_ROLE.toString()))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(TEST_USER_ID))
-                .andExpect(jsonPath("$.username").value(TEST_USERNAME))
-                .andExpect(jsonPath("$.role").value(TEST_ADMIN_ROLE.toString()));
-
-        then(userServiceMock).should().updateUserRole(TEST_USER_ID, TEST_ADMIN_ROLE);
-    }
-
-    @DisplayName("Обновление роли несуществующего пользователя - должен вернуть 404")
-    @Test
-    void updateUserRoleWhenUserNotExistsReturnNotFound() throws Exception {
-        given(userServiceMock.updateUserRole(eq(TEST_USER_ID), any(Role.class)))
-                .willThrow(new RuntimeException("User not found"));
-
-        mockMvc.perform(put("/api/admin/users/{id}/role", TEST_USER_ID)
-                        .with(csrf())
-                        .param("role", TEST_ADMIN_ROLE.toString()))
-                .andExpect(status().isNotFound());
-
-        then(userServiceMock).should().updateUserRole(TEST_USER_ID, TEST_ADMIN_ROLE);
-    }
-
-    @DisplayName("Обновление роли с неверным значением роли - должен вернуть ошибку")
-    @Test
-    void updateUserRoleWhenInvalidRoleReturnBadRequest() throws Exception {
-        mockMvc.perform(put("/api/admin/users/{id}/role", TEST_USER_ID)
-                        .with(csrf())
-                        .param("role", "INVALID_ROLE"))
-                .andExpect(status().isBadRequest());
-
-        then(userServiceMock).should(never()).updateUserRole(anyLong(), any(Role.class));
-    }
-
     @DisplayName("Удаление пользователя - должен вернуть 200 OK")
     @Test
     void deleteUserWhenUserExistsReturnOk() throws Exception {
@@ -224,69 +176,6 @@ class UserAdminControllerTest {
                 .andExpect(status().isNotFound());
 
         then(userServiceMock).should().deleteUser(0L);
-    }
-
-    @DisplayName("Проверка существования пользователя - пользователь существует, должен вернуть true")
-    @Test
-    void checkUserExistsWhenUserExistsReturnTrue() throws Exception {
-        given(userServiceMock.userExists(TEST_USERNAME)).willReturn(true);
-
-        mockMvc.perform(get("/api/admin/users/check/{username}", TEST_USERNAME))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$").value(true));
-
-        then(userServiceMock).should().userExists(TEST_USERNAME);
-    }
-
-    @DisplayName("Проверка существования пользователя - пользователь не существует, должен вернуть false")
-    @Test
-    void checkUserExistsWhenUserNotExistsReturnFalse() throws Exception {
-        given(userServiceMock.userExists(TEST_USERNAME)).willReturn(false);
-
-        mockMvc.perform(get("/api/admin/users/check/{username}", TEST_USERNAME))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$").value(false));
-
-        then(userServiceMock).should().userExists(TEST_USERNAME);
-    }
-
-    @DisplayName("Получение пользователей по роли - должен вернуть список пользователей")
-    @Test
-    void getUsersByRoleWhenUsersWithRoleExistReturnUserList() throws Exception {
-        AppUser user1 = createTestUser(1L, "user1", TEST_USER_ROLE);
-        AppUser user2 = createTestUser(2L, "user2", TEST_USER_ROLE);
-        List<AppUser> users = Arrays.asList(user1, user2);
-
-        given(userServiceMock.getUsersByRole(TEST_USER_ROLE)).willReturn(users);
-
-        mockMvc.perform(get("/api/admin/users/role/{role}", TEST_USER_ROLE))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(2))
-                .andExpect(jsonPath("$[0].role").value(TEST_USER_ROLE.toString()))
-                .andExpect(jsonPath("$[1].role").value(TEST_USER_ROLE.toString()));
-
-        then(userServiceMock).should().getUsersByRole(TEST_USER_ROLE);
-    }
-
-    @DisplayName("Получение пользователей по роли - нет пользователей с такой ролью, должен вернуть пустой список")
-    @Test
-    void getUsersByRoleWhenNoUsersWithRoleReturnEmptyList() throws Exception {
-        given(userServiceMock.getUsersByRole(TEST_ADMIN_ROLE)).willReturn(List.of());
-
-        mockMvc.perform(get("/api/admin/users/role/{role}", TEST_ADMIN_ROLE))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(0));
-
-        then(userServiceMock).should().getUsersByRole(TEST_ADMIN_ROLE);
-    }
-
-    @DisplayName("Получение пользователей по неверной роли - должен вернуть ошибку")
-    @Test
-    void getUsersByRoleWhenInvalidRoleReturnBadRequest() throws Exception {
-        mockMvc.perform(get("/api/admin/users/role/{role}", "INVALID_ROLE"))
-                .andExpect(status().isBadRequest());
-
-        then(userServiceMock).should(never()).getUsersByRole(any(Role.class));
     }
 
     @DisplayName("Получение пользователя по нулевому ID - должен вернуть ошибку")

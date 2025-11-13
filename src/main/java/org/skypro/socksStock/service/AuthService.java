@@ -1,12 +1,14 @@
 package org.skypro.socksStock.service;
 
 import lombok.RequiredArgsConstructor;
+import org.skypro.socksStock.exception.UsernameAlreadyTakenException;
 import org.skypro.socksStock.model.dto.request.LoginRequest;
 import org.skypro.socksStock.model.dto.response.AuthResponse;
 import org.skypro.socksStock.model.entity.AppUser;
 import org.skypro.socksStock.model.entity.Role;
 import org.skypro.socksStock.repository.UserRepository;
 import org.skypro.socksStock.security.JwtTokenProvider;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -64,11 +66,11 @@ public class AuthService {
      * @param password пароль пользователя
      * @param role     роль пользователя в системе
      * @return AuthResponse с JWT-токеном для нового пользователя
-     * @throws RuntimeException если пользователь с таким именем уже существует
+     * @throws UsernameAlreadyTakenException если пользователь с таким именем уже существует
      */
     public AuthResponse registerUser(String username, String password, Role role) {
         if (userRepository.findByUsername(username).isPresent()) {
-            throw new RuntimeException("Username is already taken");
+            throw new UsernameAlreadyTakenException("Username is already taken", HttpStatus.CONFLICT);
         }
 
         AppUser appUser = new AppUser();

@@ -65,6 +65,7 @@ public class SocksStockController {
      * Удаляет все записи о носках из системы.
      */
     @DeleteMapping("/delete")
+    @ResponseStatus(HttpStatus.OK)
     public void allDelete() {
         socksStockService.deleteAll();
     }

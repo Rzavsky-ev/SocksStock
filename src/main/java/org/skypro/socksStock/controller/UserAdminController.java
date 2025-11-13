@@ -2,7 +2,6 @@ package org.skypro.socksStock.controller;
 
 import lombok.RequiredArgsConstructor;
 import org.skypro.socksStock.model.entity.AppUser;
-import org.skypro.socksStock.model.entity.Role;
 import org.skypro.socksStock.service.UserService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -56,25 +55,6 @@ public class UserAdminController {
     }
 
     /**
-     * Обновляет роль пользователя по его идентификатору.
-     *
-     * @param id   идентификатор пользователя
-     * @param role новая роль пользователя
-     * @return ResponseEntity с обновленным пользователем или 404 если пользователь не найден
-     */
-    @PutMapping("/{id}/role")
-    public ResponseEntity<AppUser> updateUserRole(
-            @PathVariable Long id,
-            @RequestParam Role role) {
-        try {
-            AppUser updatedUser = userService.updateUserRole(id, role);
-            return ResponseEntity.ok(updatedUser);
-        } catch (RuntimeException e) {
-            return ResponseEntity.notFound().build();
-        }
-    }
-
-    /**
      * Удаляет пользователя по его идентификатору.
      *
      * @param id идентификатор пользователя для удаления
@@ -88,27 +68,5 @@ public class UserAdminController {
         } catch (RuntimeException e) {
             return ResponseEntity.notFound().build();
         }
-    }
-
-    /**
-     * Проверяет существование пользователя с указанным именем.
-     *
-     * @param username имя пользователя для проверки
-     * @return ResponseEntity с булевым значением true если пользователь существует, false в противном случае
-     */
-    @GetMapping("/check/{username}")
-    public ResponseEntity<Boolean> checkUserExists(@PathVariable String username) {
-        return ResponseEntity.ok(userService.userExists(username));
-    }
-
-    /**
-     * Возвращает список пользователей с указанной ролью.
-     *
-     * @param role роль пользователей для фильтрации
-     * @return ResponseEntity со списком пользователей с указанной ролью
-     */
-    @GetMapping("/role/{role}")
-    public ResponseEntity<List<AppUser>> getUsersByRole(@PathVariable Role role) {
-        return ResponseEntity.ok(userService.getUsersByRole(role));
     }
 }

@@ -1,7 +1,9 @@
 package org.skypro.socksStock.controller;
 
 import org.skypro.socksStock.exception.*;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 
@@ -80,6 +82,31 @@ public class SocksStockControllerAdvice {
      */
     @ExceptionHandler(UserNotFoundException.class)
     public ResponseEntity<String> handleUserNotFoundException(UserNotFoundException e) {
+        return new ResponseEntity<>(e.getMessage(), e.getStatus());
+    }
+
+    /**
+     * Обрабатывает исключения аутентификации Spring Security.
+     * Возникает при неудачной попытке аутентификации пользователя в системе,
+     * например, при вводе неверного имени пользователя или пароля.
+     *
+     * @param e перехваченное исключение AuthenticationException, содержащее информацию об ошибке аутентификации
+     * @return ResponseEntity с HTTP-статусом 401 (Unauthorized) и сообщением "Invalid credentials"
+     */
+    @ExceptionHandler(AuthenticationException.class)
+    public ResponseEntity<String> handleAuthenticationException(AuthenticationException e) {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid credentials");
+    }
+
+    /**
+     * Обрабатывает конфликт имен пользователей при регистрации.
+     * Возвращает HTTP-статус 409 (Conflict) с сообщением о занятом имени пользователя.
+     *
+     * @param e исключение с информацией о занятом имени пользователя
+     * @return ResponseEntity со статусом конфликта и сообщением об ошибке
+     */
+    @ExceptionHandler(UsernameAlreadyTakenException.class)
+    public ResponseEntity<String> handleUsernameAlreadyTakenException(UsernameAlreadyTakenException e) {
         return new ResponseEntity<>(e.getMessage(), e.getStatus());
     }
 }
