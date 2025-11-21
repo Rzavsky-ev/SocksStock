@@ -44,10 +44,22 @@ public class SecurityConfig {
                         session ->
                                 session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
+
+                        // Публичные эндпоинты для SpringDoc/Swagger
+                        .requestMatchers(
+                                "/swagger-ui/**",
+                                "/swagger-ui.html",
+                                "/v3/api-docs/**",
+                                "/swagger-resources/**",
+                                "/swagger-resources",
+                                "/webjars/**",
+                                "/configuration/ui",
+                                "/configuration/security"
+                        ).permitAll()
+
                         // Публичные эндпоинты
                         .requestMatchers("/api/auth/login").permitAll()
                         .requestMatchers("/api/auth/register").permitAll()
-                        .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
 
                         // Эндпоинты для аутентифицированных пользователей
                         .requestMatchers(HttpMethod.GET, "/api/socks").authenticated()

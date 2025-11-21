@@ -12,7 +12,7 @@ import org.springframework.http.ResponseEntity;
 import static org.junit.jupiter.api.Assertions.*;
 
 @ExtendWith(MockitoExtension.class)
-class SocksStockControllerAdviceTest {
+public class SocksStockControllerAdviceTest {
 
     @InjectMocks
     private SocksStockControllerAdvice controllerAdvice;
