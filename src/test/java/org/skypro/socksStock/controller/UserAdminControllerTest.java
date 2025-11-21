@@ -6,13 +6,12 @@ import org.skypro.socksStock.model.entity.AppUser;
 import org.skypro.socksStock.model.entity.Role;
 import org.skypro.socksStock.security.CustomUserDetailsService;
 import org.skypro.socksStock.security.JwtTokenProvider;
-import org.skypro.socksStock.service.AuthService;
 import org.skypro.socksStock.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.TestPropertySource;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.Arrays;
@@ -31,21 +30,18 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @TestPropertySource(properties = {
         "spring.autoconfigure.exclude=org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration"
 })
-class UserAdminControllerTest {
+public class UserAdminControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
 
-    @MockitoBean
+    @MockBean
     private UserService userServiceMock;
 
-    @MockitoBean
-    private AuthService authServiceMock;
-
-    @MockitoBean
+    @MockBean
     private JwtTokenProvider jwtTokenProviderMock;
 
-    @MockitoBean
+    @MockBean
     private CustomUserDetailsService customUserDetailsServiceMock;
 
     private static final Long TEST_USER_ID = 1L;
