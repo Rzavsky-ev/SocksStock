@@ -5,7 +5,6 @@ import io.restassured.builder.RequestSpecBuilder;
 import io.restassured.http.ContentType;
 import io.restassured.specification.RequestSpecification;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
 import org.skypro.socksStock.model.entity.AppUser;
 import org.skypro.socksStock.model.entity.Role;
 import org.skypro.socksStock.repository.SocksRepository;
@@ -19,10 +18,14 @@ import org.springframework.test.context.ActiveProfiles;
 
 import static io.restassured.RestAssured.given;
 
+/**
+ * Базовый класс для API тестов
+ * Предоставляет общую конфигурацию и утилитные методы для тестирования REST API
+ */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("test")
-@DisplayName("Базовый класс для интеграционных тестов API управления складом носков")
 public class BaseApiTest {
+
 
     @LocalServerPort
     private int port;
@@ -33,48 +36,58 @@ public class BaseApiTest {
     @Autowired
     protected SocksRepository socksRepository;
 
-    protected String jwtToken;
-
     @Autowired
     protected PasswordEncoder passwordEncoder;
+
+    protected String jwtToken;
 
     private static final String BASE_PATH = "/api";
     private static final String BASE_URI = "http://localhost";
     private static final String AUTH_LOGIN_PATH = "/auth/login";
 
+    /**
+     * Метод настройки, выполняемый перед каждым тестом
+     * Выполняет последовательную инициализацию тестового окружения:
+     * 1. Настройка RestAssured
+     * 2. Очистка базы данных
+     * 3. Создание тестового администратора
+     * 4. Получение JWT токена для аутентификации
+     */
     @BeforeEach
-    @DisplayName("Предварительная настройка: очистка БД, создание тестового администратора и получение JWT токена")
     void setUp() {
+        // Настройка базовых параметров RestAssured
         RestAssured.port = port;
         RestAssured.baseURI = BASE_URI;
 
+        // Очистка базы данных от предыдущих тестовых данных
         clearDatabase();
 
+        // Создание тестового пользователя с правами администратора
         createTestAdmin();
 
+        // Аутентификация и получение JWT токена для последующих запросов
         authenticateAndGetToken();
     }
 
-    @DisplayName("Создание тестового пользователя с ролью администратора")
+    /**
+     * Создает тестового пользователя с ролью администратора
+     * Если пользователь уже существует, метод пропускает создание
+     */
     protected void createTestAdmin() {
-        try {
-            if (userRepository.findByUsername("admin").isEmpty()) {
-                AppUser admin = new AppUser();
-                admin.setUsername("admin");
-                admin.setPassword(passwordEncoder.encode("admin"));
-                admin.setRole(Role.ROLE_ADMIN);
+        if (userRepository.findByUsername("admin").isEmpty()) {
+            AppUser admin = new AppUser();
+            admin.setUsername("admin");
+            admin.setPassword(passwordEncoder.encode("admin"));
+            admin.setRole(Role.ROLE_ADMIN);
 
-                userRepository.save(admin);
-                System.out.println("Test admin created successfully");
-            } else {
-                System.out.println("Test admin already exists");
-            }
-        } catch (Exception e) {
-            System.out.println("Failed to create test admin: " + e.getMessage());
+            userRepository.save(admin);
         }
     }
 
-    @DisplayName("Аутентификация администратора и получение JWT токена")
+    /**
+     * Выполняет аутентификацию и получает JWT токен для тестового администратора
+     * Токен сохраняется в поле jwtToken для использования в защищенных запросах
+     */
     protected void authenticateAndGetToken() {
         try {
             jwtToken = given()
@@ -91,14 +104,16 @@ public class BaseApiTest {
                     .statusCode(HttpStatus.OK.value())
                     .extract()
                     .path("token");
-            System.out.println("JWT Token received: " + (jwtToken != null ? "YES" : "NO"));
         } catch (Exception e) {
-            System.out.println("JWT auth failed: " + e.getMessage());
             jwtToken = null;
         }
     }
 
-    @DisplayName("Создание спецификации запроса для JSON данных")
+    /**
+     * Создает билдер спецификации для JSON запросов
+     *
+     * @return RequestSpecBuilder с настройками для JSON контента
+     */
     protected RequestSpecBuilder specJsonBuilder() {
         return new RequestSpecBuilder()
                 .setBasePath(BASE_PATH)
@@ -106,7 +121,11 @@ public class BaseApiTest {
                 .setContentType(ContentType.JSON);
     }
 
-    @DisplayName("Создание спецификации запроса для параметров URL")
+    /**
+     * Создает билдер спецификации для параметризованных запросов (URL encoded)
+     *
+     * @return RequestSpecBuilder с настройками для URL encoded контента
+     */
     protected RequestSpecBuilder specParamBuilder() {
         return new RequestSpecBuilder()
                 .setBasePath(BASE_PATH)
@@ -114,36 +133,45 @@ public class BaseApiTest {
                 .setContentType(ContentType.URLENC);
     }
 
-    @DisplayName("Получение спецификации JSON запроса с JWT авторизацией")
+    /**
+     * Возвращает спецификацию для JSON запросов с JWT аутентификацией
+     * Если токен доступен, добавляет заголовок Authorization
+     *
+     * @return RequestSpecification для JSON запросов
+     */
     protected RequestSpecification getSpecJson() {
         RequestSpecBuilder builder = specJsonBuilder();
         if (jwtToken != null && !jwtToken.isEmpty()) {
             return builder
-                    .addHeader("Authorization", "Bearer " + jwtToken)
+                    .addHeader("Authorization", "Bearer " + jwtToken)  // Добавление JWT токена
                     .build();
         }
         return builder.build();
     }
 
-    @DisplayName("Получение спецификации параметризованного запроса с JWT авторизацией")
+    /**
+     * Возвращает спецификацию для параметризованных запросов с JWT аутентификацией
+     * Если токен доступен, добавляет заголовок Authorization
+     *
+     * @return RequestSpecification для параметризованных запросов
+     */
     protected RequestSpecification getSpecParam() {
         RequestSpecBuilder builder = specParamBuilder();
         if (jwtToken != null && !jwtToken.isEmpty()) {
             return builder
-                    .addHeader("Authorization", "Bearer " + jwtToken)
+                    .addHeader("Authorization", "Bearer " + jwtToken)  // Добавление JWT токена
                     .build();
         }
         return builder.build();
     }
 
-    @DisplayName("Полная очистка тестовой базы данных")
+    /**
+     * Очищает базу данных от всех тестовых данных
+     * Удаляет все записи о носках и пользователях
+     * Гарантирует чистоту тестового окружения
+     */
     private void clearDatabase() {
-        try {
-            socksRepository.deleteAll();
-            userRepository.deleteAll();
-            System.out.println("Database cleared successfully");
-        } catch (Exception e) {
-            System.out.println("Database cleanup failed: " + e.getMessage());
-        }
+        socksRepository.deleteAll();
+        userRepository.deleteAll();
     }
 }
